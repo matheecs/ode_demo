@@ -8,7 +8,7 @@ Delete variable K2�v[2]
 extern double K0W[2];  //�Ҋ֐ߑO����������p
 extern double K1W[2];  //�Ҋ֐߉����������p
 // extern double K2W[2];
-// //�Ҋ֐߉����������p
+// //�Ҋ֐߃��[�����������p
 extern double HW[2];   //�G�֐ߏ����p
 extern double A0W[2];  //����㉺���������p
 extern double A1W[2];  //���񉡕��������p
@@ -16,10 +16,6 @@ extern unsigned char walkF;  //���s�t���O	�ib0:���s  b1:�
 extern double asiPress_r;  //�E��������
 extern double asiPress_l;  //����������
 extern int uvcOff;         // UVC���s�t���O
-extern double frRatI;      //��̊p�␳�p�ϕ��W��
-extern double frRatA;      //��̊p�I�t�Z�b�g�l
-extern double fhRat;       //���グ�����␳�l
-extern double fwMax;       //�����ő�l
 
 class core {
  public:
@@ -39,12 +35,9 @@ class core {
   short fwct;     //������J�E���^
   float fh;       //���グ�����w��
   short fhMax;    //���グ�ő卂��
-  float fhOfs;    //���グ�I�t�Z�b�g�l
   float dy;       //���U�苗��
   float dxi;      //�c�����ϕ��l
   float dyi;      //�������ϕ��l
-  float dvi;      //��̊p�ϕ��l
-  float dvo;      //��̊p�I�t�Z�b�g�l
   float pitch;
   float roll;
 

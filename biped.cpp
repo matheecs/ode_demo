@@ -3,22 +3,19 @@ June 1,2021
 Delete variable K2�v[2]
 Fixed restart ()
 
-ODE�ɂ��UVC(��̐�������)�̌���
-UVC�̉��p�A�o����� 2021 4/29
+ODE�ɂ��UVC(��̐�������)�̌��� 2021 4/11
 */
 
 #include "biped.h"
 
 #include <drawstuff/drawstuff.h>
 #include <math.h>
-#include <ncurses.h>
+#include <ode/ode.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <termios.h>
 #include <unistd.h>
 
 #include <fstream>
-#include <iostream>
 
 #include "core.h"
 
@@ -27,9 +24,11 @@ static void command(int cmd);
 static void nearCallback(void *data, dGeomID o1, dGeomID o2);
 static void simLoop(int pause);
 static void setJoint(jointStr *j, char k, bodyStr *b1, bodyStr *b2, char a,
-                     double x, double y, double z);
+                     double x, double y, double z, double dn, double up,
+                     double t, double tk, int s);
 static void setBody(bodyStr *b, char k, char c, double l, double w, double h,
                     double r, double x, double y, double z, int ge, double ma);
+
 static void createBody();
 void destroyBot();
 void restart();
@@ -46,7 +45,7 @@ static void start();
 //�Ԑڊp�x
 double K0W[2] = {0, 0};  //�Ҋ֐ߑO����������p
 double K1W[2] = {0, 0};  //�Ҋ֐߉����������p
-// double K2W[2]={0,0};	//�Ҋ֐߉����������p
+// double K2W[2]={0,0};	//�Ҋ֐߃��[�����������p
 double HW[2] = {0, 0};   //�G�֐ߏ����p
 double A0W[2] = {0, 0};  //����㉺���������p
 double A1W[2] = {0, 0};  //���񉡕��������p
@@ -80,10 +79,6 @@ unsigned char walkF = 0;  //���s�t���O	�ib0:���s  b1:��
 int bodyCount;   //�{�f�B�z��J�E���g�l
 int jointCount;  //�W���C���g�z��J�E���g�l
 static struct dJointFeedback feedback[50];  //�W���C���g�t�B�[�h�o�b�N�\����
-double frRatI;  //��̊p�␳�p�ϕ��W��
-double frRatA;  //��̊p�I�t�Z�b�g�l
-double fhRat;   //���グ�����␳�l
-double fwMax;   //�����ő�l
 
 //###############  �e��\���́@###############
 bodyStr *body[50];  // bodyStr�A�h���X�i�[�z��
@@ -107,10 +102,9 @@ bodyStr K1_r;  //�Ҋ֐߃��[��
 bodyStr K1_l;
 bodyStr DOU;    //��
 bodyStr HEADT;  //��
-bodyStr DAI;    //��
-bodyStr DAI2;   //��
 bodyStr base;   //�Ւf�@��
 bodyStr pole;   //�Ւf�@�_
+bodyStr BALL1;  //�{�[��
 
 jointStr *joint[50];  // jointStr�A�h���X�i�[�z��
 jointStr soleJ_r;     //�����Z���T
@@ -134,13 +128,13 @@ jointStr K1J_l;
 jointStr K2J_r;  //�Ҋ֐߃��[
 jointStr K2J_l;
 jointStr HEADJ;  //���Œ�
-jointStr DAIJ;   //��̌Œ�
-jointStr DAI2J;  //��2�̌Œ�
-jointStr baseJ;  //���̌Œ�
 jointStr poleJ;  //�|�[���̃W���C���g
+jointStr baseJ;  //���̌Œ�
+jointStr headJ;  //���̌Œ�
 
 //###############  �N���X�̎��̉��@###############
-core co;  //���s����N���X�̎��̉�
+
+core co;  //�ŉ��w�A�g���j�b�g�J�v�Z���̎��̉�
 
 //--------------------------------- command
 //----------------------------------------
@@ -174,69 +168,7 @@ static void command(int cmd) {
     case 'w':  //���s�J�n
       printf("���s�J�n\n");
       walkF = 0x01;
-      poleJ.t = 5;
       break;
-
-    case '1':  //�O�͎���
-      printf("�O�͎���\n");
-      restart();
-      fwMax = 30;
-      frRatA = 0;
-      frRatI = 0;
-      fhRat = 0;
-      setBody(&base, 'y', 'd', 260, 0, 0, 24, 0, 180, 110, 0, 0.01);  //�Ւf�@�_
-      setBody(&pole, 'y', 'y', 320, 0, 0, 8, 0, 300, 210, 1, 0.0001);  //�{�[��
-      dRFromAxisAndAngle(R, 1, 0, 0, -M_PI_2);                         //��]
-      dBodySetRotation(pole.b, R);
-      setJoint(&baseJ, 'g', &base, &base, 'x', 0, 180, 0);  //�Ւf�@���Œ�p
-      setJoint(&poleJ, 'h', &pole, &base, 'z', 0, 180, 210);  //�Ւf�@�_�q���W
-      poleJ.tm = 1;
-      poleJ.tk = 0.25;
-      break;
-
-    case '2':  //�O�i����
-      printf("�O�i����\n");
-      restart();
-      fwMax = 30;
-      frRatA = 0.0015;
-      frRatI = 0;
-      fhRat = 0;
-      goto saka;
-
-    case '3':  //�o�����
-      printf("�o�����\n");
-      restart();
-      fwMax = 30;
-      frRatA = 0.0015;
-      frRatI = 0.2;
-      fhRat = 0;
-      goto saka;
-
-    case '4':  //�i������
-      printf("�i������\n");
-      restart();
-      fwMax = 30;
-      frRatA = 0.0015;
-      frRatI = 0.2;
-      fhRat = 7;
-      setBody(&DAI2, 'b', 'g', 500, 300, 20, 0, 0, 0, -10, 1, 100);  //������
-      setJoint(&DAI2J, 'g', &DAI2, &DAI2, 'x', 50, 0, 0);  //��Œ�p
-      break;
-
-    case '5':  //�ŏI����
-      printf("�ŏI����\n");
-      restart();
-      fwMax = 30;
-      frRatI = 0.2;
-      frRatA = 0.0015;
-      fhRat = 7;
-    saka:
-      setBody(&DAI, 'b', 'g', 680, 300, 100, 0, 480, 0, -70, 1, 100);  //�X�Α�
-      dRFromAxisAndAngle(R, 0, 1, 0, -0.05);                           //��]
-      dBodySetRotation(DAI.b, R);
-      setJoint(&DAIJ, 'g', &DAI, &DAI, 'x', 50, 0, 0);  //��Œ�p
-      break;
-
     case 'r':
     case 'R':  //������
       printf("������\n");
@@ -249,7 +181,6 @@ static void command(int cmd) {
       break;
     case 'u':
     case 'U':  // UVC ON/OFF
-      printf("UVC ON/OFF\n");
       if (uvcOff == 0) {
         uvcOff = 1;
       } else {
@@ -267,7 +198,6 @@ static void nearCallback(void *data, dGeomID o1, dGeomID o2) {
   dContact contact[N];
   dBodyID b1 = dGeomGetBody(o1);
   dBodyID b2 = dGeomGetBody(o2);
-
   if (b1 && b2 && dAreConnectedExcluding(b1, b2, dJointTypeContact)) return;
   n = dCollide(o1, o2, N, &contact[0].geom, sizeof(dContact));
   if (n > 0) {
@@ -276,8 +206,8 @@ static void nearCallback(void *data, dGeomID o1, dGeomID o2) {
           dContactBounce | dContactSoftERP | dContactSoftCFM;
       contact[i].surface.soft_cfm = 0.00005;  //�_�炩���A�e��
       contact[i].surface.soft_erp = 0.1;  //�_�炩���A���ݍ���
-      if (pole.b != NULL && (b1 == pole.b || b2 == pole.b))
-        contact[i].surface.mu = 0.2;  //�|�[���̖��C
+      if ((ground != o1) && (ground != o2))
+        contact[i].surface.mu = 0.2;  //���̊Ԗ��C
       else
         contact[i].surface.mu = 5;        //�n�ʊԖ��C
       contact[i].surface.bounce = 0;      // bouncing the objects
@@ -320,22 +250,6 @@ static void control() {
   }
 }
 
-char mygetch() {
-  char buf = 0;
-  struct termios old = {0};
-  if (tcgetattr(0, &old) < 0) perror("tcsetattr()");
-  old.c_lflag &= ~ICANON;
-  old.c_lflag &= ~ECHO;
-  old.c_cc[VMIN] = 1;
-  old.c_cc[VTIME] = 0;
-  if (tcsetattr(0, TCSANOW, &old) < 0) perror("tcsetattr ICANON");
-  if (read(0, &buf, 1) < 0) perror("read()");
-  old.c_lflag |= ICANON;
-  old.c_lflag |= ECHO;
-  if (tcsetattr(0, TCSADRAIN, &old) < 0) perror("tcsetattr ~ICANON");
-  return (buf);
-}
-
 //--------------------------------- simLoop
 //---------------------------------------- 	simulation loop
 static void simLoop(int pause) {
@@ -348,9 +262,12 @@ static void simLoop(int pause) {
   dVector3 headVel1;
   dVector3 headVel2;
 
-  //	Sleep(1);			//�`�摬�x�̒���
-  a = mygetch();  //�L�[�Ǎ�
-  command(a);
+  usleep(1000);  //�`�摬�x�̒���
+  // if (kbhit()) {
+  //   a = getchar();  //�L�[�Ǎ�
+  //   command(a);
+  // }
+  command('w');
 
   if (!pause) {
     //******** ���̂R�s�͍ŏ��ɒu���ׂ� ********
@@ -401,9 +318,9 @@ static void simLoop(int pause) {
         break;
       case 'b':
         if (uvcOff == 0)
-          dsSetColor(0.3, 0.3, 2.0);  //��
+          dsSetColor(0.3, 0.3, 2.0);
         else
-          dsSetColor(2.0, 0.3, 0.3);  //��
+          dsSetColor(2.0, 0.3, 0.3);
         break;
       case 'y':
         dsSetColor(1, 1, 0);
@@ -454,8 +371,6 @@ static void setBody(bodyStr *b, char k, char c, double l, double w, double h,
   //���a�@  �O��ʒu   ���E�ʒu�@�㉺�ʒu  �W�I���g�@�d��
 
   dMass m;
-
-  z += 20;
 
   //�X�P�[������
   l /= 1000;
@@ -553,8 +468,6 @@ static void setJoint(jointStr *j, char k, bodyStr *b1, bodyStr *b2, char a,
   //�����F�@            �Ώ�Joint�@Joint���   Body�ԍ�1  �@Body�ԍ�2�@ �ݒ莲  �O��ʒu
   //���E�ʒu�@�㉺�ʒu
 
-  z += 20;
-
   x /= 1000;
   y /= 1000;
   z /= 1000;
@@ -635,11 +548,12 @@ static void createBody() {
   //	####################
   //	#### �{�f�B���� ####
   //	####################
-  //						    ��� �F		L�@ W
-  // H R X Y Z �W�I���g �d��
+  //						    ��� �F  L�@  W    H     R X
+  // Y Z �W�I���g �d��
 
   setBody(&HEADT, 'c', 'w', 15, 0, 0, 21, 0, 0, 340, 0, 0.16);  //��
   setBody(&DOU, 'b', 'b', 40, 84, 130, 0, 0, 0, 260, 1, 1.24);  //��
+
   setBody(&K0_r, 'y', 'd', 34, 0, 0, 12, 0, -fw, 195, 0,
           0.05);                            //�Ҋ֐߃s�b�`
   dRFromAxisAndAngle(R, 1, 0, 0, -M_PI_2);  //��]
@@ -682,12 +596,17 @@ static void createBody() {
   setBody(&solep_r, 'b', 'r', 55, 40, 6, 0, 0, -fw, 3.0, 1,
           0.01);  //�\�[���Z���T
   setBody(&solep_l, 'b', 'r', 55, 40, 6, 0, 0, fw, 3.0, 1, 0.01);
-  pole.b = 0;  //���C�W���ݒ����
+
+  setBody(&BALL1, 's', 'd', 0, 0, 0, 50, 900, 140, 50, 1, 4.0);  //�Ւf�@��
+  setBody(&base, 'y', 'd', 220, 0, 0, 24, 210, 180, 150, 0, 0.01);  //�Ւf�@�_
+  setBody(&pole, 'y', 'y', 500, 0, 0, 8, 210, 0, 230, 1, 0.0001);  //�{�[��
+  dRFromAxisAndAngle(R, 1, 0, 0, -M_PI_2);                         //��]
+  dBodySetRotation(pole.b, R);
 
   //	######################
   //	####�W���C���g����####
   //	######################
-  //							���		B�ԍ�1
+  //							���	 B�ԍ�1
   // B�ԍ�2 �� X Y		Z
 
   setJoint(&HEADJ, 'f', &HEADT, &DOU, 'z', 0, 0, 360);    //���Œ�p
@@ -711,6 +630,11 @@ static void createBody() {
   setJoint(&A1J_l, 'h', &sole_l, &A1_l, 'x', 0, fw - 11, 15);
   setJoint(&soleJ_r, 'd', &solep_r, &sole_r, 'x', 0, -fw, 6);  //�\�[�����̓Z���T
   setJoint(&soleJ_l, 'd', &solep_l, &sole_l, 'x', 0, fw, 6);
+
+  setJoint(&baseJ, 'g', &base, &base, 'x', 210, 180, 0);  //�Ւf�@���Œ�p
+  setJoint(&poleJ, 'h', &pole, &base, 'z', 210, 180, 110);  //�Ւf�@�_�q���W
+  poleJ.tm = 7;
+  poleJ.tk = 0.2;
 
   dJointSetFeedback(soleJ_r.j, &feedback[0]);
   dJointSetFeedback(soleJ_l.j, &feedback[1]);
@@ -747,10 +671,6 @@ void restart() {
   co.autoHs = 180;
   walkF = 0;
   uvcOff = 0;
-  frRatI = 0;
-  frRatA = 0;
-  fhRat = 0;
-  fwMax = 0;
 
   K0W[0] = 0;  //�Ҋ֐ߑO�����
   K1W[0] = 0;  //�Ҋ֐߉�����

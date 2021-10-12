@@ -2,17 +2,16 @@
 June 1,2021
 Corrected setting errors of LEG, autoH, and autoHs.
 Corrected (K0�r�U��p�x)
+
 */
 
 #include "core.h"
 
-// #include<conio.h>
 #include <drawstuff/drawstuff.h>
 #include <math.h>
 #include <ode/ode.h>
 #include <stdio.h>
 #include <stdlib.h>
-// #include <windows.h>
 
 #include <fstream>
 #include <iomanip>
@@ -25,7 +24,6 @@ Corrected (K0�r�U��p�x)
 #define LEG 180.0  // Update in June 1,2021 :Before revision(#define LEG 190.0)
 
 using namespace std;
-
 core::core(void) {
   adjFR = 2.04;
   autoH = 170;   // Update in June 1,2021 :Before revision(autoH=180)
@@ -34,15 +32,13 @@ core::core(void) {
   walkF = 0;
   pitch = 0;
   roll = 0;
-  frRatI = 0;
-  frRatA = 0;
 }
 
 core::~core(void) {}
 
-// *****************
-// **  �r�ʒu����  **
-// *****************
+// ******************
+// *	*  �r�ʒu����  **
+// ******************
 void core::footCont(float x, float y, float h, int s) {
   // x:���_��0�Ƃ��鑫�O����������i�O+�j
   // y:���_��0�Ƃ��鑫���E���������i�E+�j
@@ -60,7 +56,7 @@ void core::footCont(float x, float y, float h, int s) {
 
   fbAV = 0;  // UVC�]���ׁ̈A�W���C���͖����ɂ���
   lrAV = 0;
-  K0W[s] = k + x + dvi + dvo;
+  K0W[s] = k + x;
   HW[s] = k * 2;
   A0W[s] = k - x - 0.003 * fbAV;
   k = atan(y / h);  // K1�p�x
@@ -71,9 +67,9 @@ void core::footCont(float x, float y, float h, int s) {
     A1W[s] = -k + 0.002 * lrAV;
 }
 
-// *********************
-// **  ���s���䃁�C��  **
-// *********************
+// **********************
+// *	*  ���s���䃁�C��  **
+// **********************
 void core::walk(void) {
   short i, j;
   float k;
@@ -107,36 +103,32 @@ void core::walk(void) {
       dxi = 0;
       dyi = 0;
       dy = 0;
-      dvi = 0;
-      dvo = 0;
-      fw = 0;
       jikuasi = 0;
       fwctEnd = 48;
       swf = 12;
       fhMax = 20;
       landRate = 0.2;
-      fhOfs = 0;
+      fh = 0;
+
       footCont(-adjFR, 0, autoH, 0);
       footCont(-adjFR, 0, autoH, 1);
-      if (walkF & 0x01) mode = 20;
+
+      if (walkF & 0x01) {
+        fw = 20;
+        mode = 20;
+      }
       break;
 
-    /////////////////////////////////////////////////////////////////
-    //////////////////////// �@���s����   ///////////////////////////
-    /////////////////////////////////////////////////////////////////
+      /////////////////////////////////////////////////////////////////
+      //////////////////////// �@���s����   ///////////////////////////
+      /////////////////////////////////////////////////////////////////
+
     case 20:
-    case 25:
     case 30:
 
       //###########################################################
       //###################  UVC(��̐�������) ####################
       //###########################################################
-      if (fw < fwMax - 1)
-        dvo = frRatA;  //// �O�X�O�i ////
-      else
-        dvo = 0;
-      dvi += frRatI * (fbRad + dvo);  //// ��̊p�ϕ� ////
-
       if ((jikuasi == 0 && asiPress_r < -0.1 && asiPress_l > -0.1) ||
           (jikuasi == 1 && asiPress_r > -0.1 && asiPress_l < -0.1)) {
         k = 1.5 * 193 * sin(lrRad);  //// ���E�����ψ� ////
@@ -174,16 +166,9 @@ void core::walk(void) {
             -(fw - dxi) * (2.0 * fwct / fwctEnd - 1);  //���r�����ڍsUVC�K�p
 
       //// �V�r���O�U�萧�� ////
-      if (mode == 20 || mode == 25) {  //���r�V�t�g����
+      if (mode == 20) {  //���r�V�t�g����
         if (fwct < (landRate * fwctEnd)) {
           dx[jikuasi ^ 1] = fwr1 - (fwr0 - dx[jikuasi]);
-          if (mode == 20 && fwct > 2) {
-            if ((jikuasi == 0 && asiPress_r < -0.1) ||
-                (jikuasi == 1 && asiPress_l < -0.1))
-              mode = 25;
-            else
-              fhOfs += fhRat;
-          }
         } else {
           fwr1 = dx[jikuasi ^ 1];
           mode = 30;
@@ -211,13 +196,10 @@ void core::walk(void) {
 
       //// ���㐧�� ////
       i = landRate * fwctEnd;
-      if (fwct > i) {
-        if (fwct < (fwctEnd - i) / 2)
-          fh = fhOfs + fhMax * sinf(M_PI * (fwct - i) / (fwctEnd - i));
-        else
-          fh = (fhMax + fhOfs) * sinf(M_PI * (fwct - i) / (fwctEnd - i));
-      } else
-        fh = fhOfs;
+      if (fwct > i)
+        fh = fhMax * sinf(M_PI * (fwct - i) / (fwctEnd - i));
+      else
+        fh = 0;
 
       //// �r����֐��Ăяo�� ////
       if (jikuasi == 0) {
@@ -238,10 +220,11 @@ void core::walk(void) {
         fwr0 = dx[jikuasi];
         fwr1 = dx[jikuasi ^ 1];
         fh = 0;
-        fhOfs = 0;
         mode = 20;
-        if (fw < fwr0) fw = fwr0;
-        if (fw > fwMax) fw = fwMax;  //// ��̑O��p�ϕ� ////
+        if (fw == 20) {  //��������
+          landRate = 0.1;
+          fw = 40;
+        }
       } else
         ++fwct;
       break;
