@@ -12,3 +12,15 @@ link_directories(/usr/local/opt/ncurses/lib)
 
 add_executable(uvc core.cpp biped.cpp)
 target_link_libraries(uvc ${ODE_LIBRARIES} drawstuff ncurses)
+
+add_executable(hello hello.cc)
+target_link_libraries(hello ${ODE_LIBRARIES} drawstuff)
+
+add_executable(ds_demo ds_demo.cc)
+target_link_libraries(ds_demo ${ODE_LIBRARIES} drawstuff)
+
+add_executable(collision collision.cc)
+target_link_libraries(collision ${ODE_LIBRARIES} drawstuff)
+
+add_executable(joint joint.cc)
+target_link_libraries(joint ${ODE_LIBRARIES} drawstuff)
