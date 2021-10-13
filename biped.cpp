@@ -262,12 +262,12 @@ static void simLoop(int pause) {
   dVector3 headVel1;
   dVector3 headVel2;
 
-  usleep(1000);  //�`�摬�x�̒���
+  // usleep(1000);  //�`�摬�x�̒���
   // if (kbhit()) {
   //   a = getchar();  //�L�[�Ǎ�
   //   command(a);
   // }
-  command('w');
+  // command('w');
 
   if (!pause) {
     //******** ���̂R�s�͍ŏ��ɒu���ׂ� ********
@@ -703,7 +703,7 @@ int main(int argc, char **argv) {
   fn.version = DS_VERSION;
   fn.start = &start;
   fn.step = &simLoop;
-  //	fn.command = &command;�@//Windows10���痘�p�ł��Ȃ��Ȃ���
+  fn.command = &command;
   fn.stop = 0;
   fn.path_to_textures =
       "/Users/zhangjixiang/Code/ode-0.16.2/drawstuff/textures";

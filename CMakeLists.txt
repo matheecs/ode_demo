@@ -24,3 +24,12 @@ target_link_libraries(collision ${ODE_LIBRARIES} drawstuff)
 
 add_executable(joint joint.cc)
 target_link_libraries(joint ${ODE_LIBRARIES} drawstuff)
+
+add_executable(force force.cc)
+target_link_libraries(force ${ODE_LIBRARIES} drawstuff)
+
+add_executable(arm arm.cc)
+target_link_libraries(arm ${ODE_LIBRARIES} drawstuff)
+
+add_executable(key key.cc)
+target_link_libraries(key ${ODE_LIBRARIES} drawstuff)

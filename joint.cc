@@ -134,6 +134,7 @@ int main(int argc, char **argv) {
   contactgroup = dJointGroupCreate(0);
 
   dWorldSetGravity(world, 0, 0, -9.8);
+  dWorldSetCFM(world, 0.5);
 
   // Create a ground
   ground = dCreatePlane(space, 0, 0, 1, 0);
