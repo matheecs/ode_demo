@@ -3,6 +3,21 @@
     "*.urdf": "xml",
     "*.xml": "xml",
     "*.cfg": "python",
-    "fstream": "cpp"
-  }
+    "fstream": "cpp",
+    "__locale": "cpp",
+    "__string": "cpp",
+    "string": "cpp",
+    "string_view": "cpp",
+    "quat": "cpp",
+    "vec2d": "cpp",
+    "vec2f": "cpp",
+    "vec3d": "cpp",
+    "vec3f": "cpp",
+    "vec4d": "cpp",
+    "vec4f": "cpp",
+    "camera": "cpp",
+    "graphicscontext": "cpp",
+    "viewport": "cpp"
+  },
+  "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
 }

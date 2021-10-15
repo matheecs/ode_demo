@@ -33,3 +33,9 @@ target_link_libraries(arm ${ODE_LIBRARIES} drawstuff)
 
 add_executable(key key.cc)
 target_link_libraries(key ${ODE_LIBRARIES} drawstuff)
+
+add_executable(legged legged.cc)
+target_link_libraries(legged ${ODE_LIBRARIES} drawstuff)
+
+add_executable(ode_book ode_book.cc)
+target_link_libraries(ode_book ${ODE_LIBRARIES} drawstuff)

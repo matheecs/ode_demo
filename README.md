@@ -2,11 +2,11 @@
 
 **Joint limitation**
 
-| Joint | LowerBound | UpperBound |
-| ----- | ---------- | ---------- |
-| Ab/Ad | -90°/-45°  | 45°/90°    |
-| Hip   | -240°      | 60°        |
-| Knee  | 36°        | 166°       |
+| Joint      | LowerBound | UpperBound |
+| ---------- | ---------- | ---------- |
+| Ab/Ad (hx) | -90°/-45°  | 45°/90°    |
+| Hip (hy)   | -240°      | 60°        |
+| Knee (kn)  | 36°        | 166°       |
 
 **Size and mass parameters**
 
