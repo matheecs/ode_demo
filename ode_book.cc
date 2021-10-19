@@ -181,7 +181,7 @@ static void nearCallback(void *data, dGeomID o1, dGeomID o2) {
   if (n > 0) {
     for (int i = 0; i < n; i++) {
       contact[i].surface.mode = dContactSoftERP | dContactSoftCFM;
-      contact[i].surface.mu = dInfinity;  // 2.0;
+      contact[i].surface.mu = 0.8;  // 2.0;
       contact[i].surface.soft_erp = 0.9;
       contact[i].surface.soft_cfm = 1e-5;
       dJointID c = dJointCreateContact(world, contactgroup, &contact[i]);
@@ -355,7 +355,7 @@ void calcAngle() /*** �ڕW�p�x�̌v�Z (Calculate target angles) ***/
   };
 
   dReal angle1, angle2, angle3;
-  int posture = 2;  // �p��(posture)
+  int posture = 1;  // �p��(posture)
   for (int i = 0; i < 12; i++) {
     for (int k = 0; k < LEG_NUM; k++) {
       inverseKinematics(traj[i][k][0],
