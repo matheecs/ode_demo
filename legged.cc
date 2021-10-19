@@ -102,7 +102,7 @@ void setDrawStuff() {
       "/Users/zhangjixiang/Code/ode-0.16.2/drawstuff/textures";
 }
 
-void createLeggedRobot() {
+void makeRobot() {
   dReal init_z = 1.0;
   {
     // set torse link
@@ -197,18 +197,20 @@ void createLeggedRobot() {
 }
 
 int main(int argc, char** argv) {
-  setDrawStuff();
   dInitODE();
+  setDrawStuff();
   world = dWorldCreate();
   space = dHashSpaceCreate(0);
   contactgroup = dJointGroupCreate(0);
-  dWorldSetGravity(world, 0, 0, -9.8);
-
   ground = dCreatePlane(space, 0, 0, 1, 0);
-  createLeggedRobot();
+  dWorldSetGravity(world, 0, 0, -9.8);
+  dWorldSetCFM(world, 1e-3);
+  dWorldSetERP(world, 0.9);
 
-  dsSimulationLoop(argc, argv, 1920, 1080, &fn);
+  makeRobot();
 
+  dsSimulationLoop(argc, argv, 800, 480, &fn);
+  dSpaceDestroy(space);
   dWorldDestroy(world);
   dCloseODE();
   return 0;
